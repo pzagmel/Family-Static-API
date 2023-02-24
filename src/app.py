@@ -25,62 +25,53 @@ def handle_invalid_usage(error):
 
 # generate sitemap with all your endpoints
 
-
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
 
 
 @app.route('/members', methods=['GET'])
-def get_member():
-
-    # this is how you can use the Family datastructure by calling its methods
+def get_all_members():
     members = jackson_family.get_all_members()
-    response_body = {
-        "hello": "world",
-        "family": members
-    }
+    if not members:
+        # Si la lista de miembros está vacía, devolver 404
+        return jsonify({"error": "No se encontraron miembros"}), 404
 
-    return jsonify(response_body), 200
+    # Devolver la lista de miembros como objeto JSON con código de estado 200
+    return jsonify({"family": members}), 200
 
 
-@app.route('/members/<int:member_id', methods=['GET'])
-def get_member_id():
+@app.route('/members/<int:id>', methods=['GET'])
+def get_member_by_id(id):
+    member = jackson_family.get_member(id)
+    if not member:
+        # Si no se encontró el miembro con el ID proporcionado, devolver 404
+        return jsonify({"error": "Miembro no encontrado"}), 404
 
-    # this is how you can use the Family datastructure by calling its methods
-    members = jackson_family.get_all_members()
-    response_body = {
-        "hello": "world",
-        "family": members
-    }
-
-    return jsonify(response_body), 200
-
+    # Devolver el miembro como objeto JSON con código de estado 200
+    return jsonify(member), 200
 
 @app.route('/members', methods=['POST'])
 def add_member():
-
-    # this is how you can use the Family datastructure by calling its methods
-    members = jackson_family.get_all_members()
+    new_member = request.get_json()
+    jackson_family.add_member(new_member)
     response_body = {
-        "hello": "world",
-        "family": members
+        "msg": "Miembro agregado exitosamente",
+        "family": jackson_family.get_all_members()
     }
-
     return jsonify(response_body), 200
 
 
-@app.route('/members/<int:member_id', methods=['DELETE'])
-def delete_member_id():
+@app.route('/members/<int:id>', methods=['DELETE'])
+def delete_member(id):
+    deleted = jackson_family.delete_member(id)
+    if not deleted:
+        # Si el miembro no se pudo eliminar, devolver 404
+        return jsonify({"error": "Miembro no encontrado"}), 404
 
-    # this is how you can use the Family datastructure by calling its methods
-    members = jackson_family.get_all_members()
-    response_body = {
-        "hello": "world",
-        "family": members
-    }
+    # Devolver una respuesta de éxito si se eliminó el miembro
+    return jsonify({"done": True}), 200
 
-    return jsonify(response_body), 200
 
 
 # this only runs if `$ python src/app.py` is executed
